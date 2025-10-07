@@ -1,4 +1,5 @@
-from typing import Tuple
+from typing import Callable, Tuple
+from functools import partial
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -11,6 +12,10 @@ class Pooling:
     AVG = Case(dim=int, ceil_mode=bool, count_include_pad=bool, padding=int, stride=int, kernel_size=int)
     ADAPTIVE_AVG = Case(dim=int, output_size=int|Tuple[int, ...])
     LP = Case(dim=int, ceil_mode=bool, stride=int, kernel_size=int)
+
+    @staticmethod
+    def avg_f(stride=1, padding=1, ceil_mode=False, dilation=1,  return_indices=False)->Callable:
+        return partial(Pooling.AVG, stride=stride, padding=padding, ceil_mode=ceil_mode,  dilation=dilation, return_indices=return_indices)
 
     def get_layer(self) -> nn.Module:
         p : nn.Module
