@@ -19,22 +19,22 @@ class Activation:
 
     @staticmethod
     def elu(inplace=True):
-        Activation.ELU(inplace=inplace)
+        return Activation.ELU(inplace=inplace)
     @staticmethod
     def lrelu(negative_slope=0.2, inplace=True):
-        Activation.LRELU(negative_slope=negative_slope, inplace=inplace)
+        return Activation.LRELU(negative_slope=negative_slope, inplace=inplace)
     @staticmethod
     def prelu(num_parameters=1, init=0.25):
-        Activation.PRELU(num_parameters=num_parameters, init=init)
+        return Activation.PRELU(num_parameters=num_parameters, init=init)
     @staticmethod
     def relu(inplace=True):
-        Activation.RELU(inplace=inplace)
+        return Activation.RELU(inplace=inplace)
     @staticmethod
     def swish(inplace=True):
-        Activation.SWISH(inplace=inplace)
+        return Activation.SWISH(inplace=inplace)
     @staticmethod
     def memswish(inplace=True):
-        Activation.MEMSWISH(inplace=inplace)
+        return Activation.MEMSWISH(inplace=inplace)
 
     def get_layer(self)->nn.Module:
         a : nn.Module 
@@ -65,25 +65,25 @@ class Normalization:
 
     @staticmethod
     def instance(num_features:int, affine=True):
-        Normalization.INSTANCE(num_features=num_features, affine=affine)
+        return Normalization.INSTANCE(num_features=num_features, affine=affine)
     @staticmethod
     def batch(num_features:int):
-        Normalization.BATCH(num_features=num_features)
+        return Normalization.BATCH(num_features=num_features)
     @staticmethod
     def instance_nvfuser(num_features:int, affine=True):
-        Normalization.INSTANCE_NVFUSER(num_features=num_features, affine=affine)
+        return Normalization.INSTANCE_NVFUSER(num_features=num_features, affine=affine)
     @staticmethod
     def localresponse(size=5, alpha=0.0001, beta=0.75, k=2.0):
-        Normalization.LOCALRESPONSE(size=size, alpha=alpha, beta=beta, k=k)
+        return Normalization.LOCALRESPONSE(size=size, alpha=alpha, beta=beta, k=k)
     @staticmethod
     def layer(normalized_shape=[1], eps=1e-05, elementwise_affine=True):
-        Normalization.LAYER(normalized_shape=normalized_shape, eps=eps, elementwise_affine=elementwise_affine)
+        return Normalization.LAYER(normalized_shape=normalized_shape, eps=eps, elementwise_affine=elementwise_affine)
     @staticmethod
     def group(num_groups=4, num_channels=1, affine=True):
-        Normalization.GROUP(num_groups=num_groups, num_channels=num_channels, affine=affine)
+        return Normalization.GROUP(num_groups=num_groups, num_channels=num_channels, affine=affine)
     @staticmethod
     def syncbatch(num_features, eps=1e-5, momentum=0.1, affine=True, track_running_stats=True):
-        Normalization.SYNCBATCH(num_features=num_features, eps=eps, momentum=momentum, affine=affine, track_running_stats=track_running_stats)
+        return Normalization.SYNCBATCH(num_features=num_features, eps=eps, momentum=momentum, affine=affine, track_running_stats=track_running_stats)
 
     def get_layer(self)->nn.Module:
         n : nn.Module 
