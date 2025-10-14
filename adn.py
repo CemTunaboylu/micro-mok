@@ -63,23 +63,23 @@ class Activation(IntoLayer):
 
 @enum
 class Normalization(IntoLayer):
-    INSTANCE = Case(num_features=int, affine=bool)
-    BATCH = Case(num_features=int)
-    INSTANCE_NVFUSER = Case(num_features=int, affine=bool)
+    INSTANCE = Case(dim=int, num_features=int, affine=bool)
+    BATCH = Case(dim=int, num_features=int)
+    # INSTANCE_NVFUSER = Case(dim=int, num_features=int, affine=bool)
     LOCALRESPONSE = Case(size=int, alpha=float, beta=float, k=float) 
     LAYER = Case(normalized_shape=list, eps=float, elementwise_affine=bool)
     GROUP = Case(num_groups=int, num_channels=int, affine=bool)
     SYNCBATCH = Case(num_features=int, eps=float, momentum=float, affine=bool, track_running_stats=bool)
 
     @staticmethod
-    def instance(num_features:int, affine=True):
-        return Normalization.INSTANCE(num_features=num_features, affine=affine)
+    def instance(dim:int, num_features:int, affine=True):
+        return Normalization.INSTANCE(dim=dim, num_features=num_features, affine=affine)
     @staticmethod
-    def batch(num_features:int):
-        return Normalization.BATCH(num_features=num_features)
-    @staticmethod
-    def instance_nvfuser(num_features:int, affine=True):
-        return Normalization.INSTANCE_NVFUSER(num_features=num_features, affine=affine)
+    def batch(dim:int, num_features:int):
+        return Normalization.BATCH(dim=dim, num_features=num_features)
+    # @staticmethod
+    # def instance_nvfuser(dim:int, num_features:int, affine=True):
+    #     return Normalization.INSTANCE_NVFUSER(dim=dim, num_features=num_features, affine=affine)
     @staticmethod
     def localresponse(size=5, alpha=0.0001, beta=0.75, k=2.0):
         return Normalization.LOCALRESPONSE(size=size, alpha=alpha, beta=beta, k=k)
@@ -96,12 +96,19 @@ class Normalization(IntoLayer):
     def get_layer(self)->nn.Module:
         n : nn.Module 
         match self:
-            case Normalization.INSTANCE(num_features, affine):
-                n =  nn.InstanceNorm1d(num_features=num_features, affine=affine)
-            case Normalization.BATCH(num_features):
-                n =  nn.BatchNorm1d(num_features=num_features)
-            case Normalization.INSTANCE_NVFUSER(num_features, affine):
-                n =  nn.InstanceNorm1d(num_features=num_features, affine=affine, track_running_stats=False)
+            case Normalization.INSTANCE(dim, num_features, affine):
+                dim_assertion(dim)
+                norms = [nn.InstanceNorm1d, nn.InstanceNorm2d, nn.InstanceNorm3d]
+                n =  norms[dim-1](num_features=num_features, affine=affine)
+            case Normalization.BATCH(dim, num_features):
+                dim_assertion(dim)
+                norms = [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]
+                n =  norms[dim-1](num_features=num_features)
+            # ! note: ensure torch._C._jit_set_nvfuser_enabled(True)
+            # case Normalization.INSTANCE_NVFUSER(dim, num_features, affine):
+            #     dim_assertion(dim)
+            #     norms = [nn.InstanceNorm1d, nn.InstanceNorm2d, nn.InstanceNorm3d]
+            #     n =  norms[dim-1](num_features=num_features, affine=affine, track_running_stats=False)
             case Normalization.LOCALRESPONSE(size, alpha, beta, k):
                 n =  nn.LocalResponseNorm(size=size, alpha=alpha, beta=beta, k=k)
             case Normalization.LAYER(normalized_shape, eps, elementwise_affine):
@@ -113,9 +120,7 @@ class Normalization(IntoLayer):
         return n
 
 def get_dropout_layer(dim:int, p:Optional[float], inplace:bool=True)->nn.Dropout1d|nn.Dropout2d|nn.Dropout3d:
-    allowed_dims = (1,2,3)
-    if dim not in allowed_dims:
-        raise ValueError(f"dim must be in {allowed_dims}.")
+    dim_assertion(dim)
     dropout_layer = (nn.Dropout1d, nn.Dropout2d ,nn.Dropout3d)[dim-1]
     if p is not None:
         dropout_layer = partial(dropout_layer, p=p)
@@ -132,7 +137,7 @@ class ADN(nn.Sequential):
             dropout_prob: float | None = None,
             ):
         super().__init__()
-        op_dict = {"A": act, "D": None, "N": None}
+        op_dict : dict[str, nn.Module| None] = {"A": act.get_layer(), "D": None, "N": None}
         if norm is not None:
             op_dict["N"] = norm.get_layer() # get_norm_layer(name=norm, spatial_dims=norm_dim or dropout_dim, channels=in_channels)
 
