@@ -1,3 +1,4 @@
+import abc
 from functools import partial
 from typing import Optional, Tuple
 
@@ -6,10 +7,17 @@ import torch
 from torch import nn
 F = nn.functional
 
-from sys import path 
+def dim_assertion(dim:int, allowed_dims = (1,2,3)):
+    if dim not in allowed_dims:
+        raise ValueError(f"dim must be in {allowed_dims}.")
+
+class IntoLayer(abc.ABC):
+    @abc.abstractmethod
+    def get_layer(self)->nn.Module:
+        raise NotImplementedError()
 
 @enum
-class Activation:
+class Activation(IntoLayer):
     ELU = Case(inplace=bool)
     LRELU = Case(negative_slope=float, inplace=bool) # Leaky ReLU
     PRELU = Case(num_parameters=int, init=float)
@@ -54,7 +62,7 @@ class Activation:
         return a
 
 @enum
-class Normalization:
+class Normalization(IntoLayer):
     INSTANCE = Case(num_features=int, affine=bool)
     BATCH = Case(num_features=int)
     INSTANCE_NVFUSER = Case(num_features=int, affine=bool)
